@@ -8,7 +8,7 @@ form.addEventListener('submit', function (event) {
 
   const taskText = input.value.trim();
 
-  const taskHTML = `<li class="list-group-item d-flex justify-content-between"><span class="task-title">${taskText}</span><button type="button" data-action="delete-task" class="btn btn-light align-self-end">Удалить</button></li>`;
+  const taskHTML = `<li class="list-group-item d-flex justify-content-between"><span contenteditable="true" class="task-title">${taskText}</span><div><button type="button" data-action="ready" class="btn btn-light align-self-end">Выполнено!</button><button type="button" data-action="delete-task" class="btn btn-light align-self-end">Удалить</button></div></li>`;
 
   tasksList.insertAdjacentHTML('beforeEnd', taskHTML);
 
@@ -22,14 +22,26 @@ form.addEventListener('submit', function (event) {
   showNotification('new');
 });
 
-// !удаление задачи из списка
+// ! прослушиваем клик внутри всего списка с задачами
 tasksList.addEventListener('click', function (event) {
   if (event.target.getAttribute('data-action') == 'delete-task') {
-    event.target.parentElement.remove();
+    event.target.closest('.list-group-item').remove();
     // скрываем или показываем запись список дел пуст
     toggleEmptyListItem();
 
     showNotification('delete');
+  } else if (event.target.getAttribute('data-action') == 'ready') {
+    const parentElement = event.target.closest('.list-group-item');
+
+    parentElement.querySelector('.task-title').classList.add('task-title--done');
+
+    parentElement.querySelector('.task-title').setAttribute('contenteditable', 'false');
+
+    tasksList.insertAdjacentElement('beforeEnd', parentElement);
+
+    event.target.remove();
+
+    showNotification('ready');
   }
 });
 
@@ -42,7 +54,7 @@ function toggleEmptyListItem() {
   }
 }
 
-// ! Задача добавлена!
+// ! Задача добавлена! |Задача удалена!
 function showNotification(type) {
   const notifyNew = document.createElement('div');
   notifyNew.className = 'alert alert-warning';
@@ -52,6 +64,10 @@ function showNotification(type) {
   notifyDelete.className = 'alert alert-danger';
   notifyDelete.textContent = 'Задача удалена!';
 
+  const notifyReady = document.createElement('div');
+  notifyReady.className = 'alert alert-success';
+  notifyReady.textContent = 'Задача выполнена!';
+
   let newElement;
 
   switch (type) {
@@ -60,6 +76,9 @@ function showNotification(type) {
       break;
     case 'delete':
       newElement = notifyDelete;
+      break;
+    case 'ready':
+      newElement = notifyReady;
       break;
   }
 
